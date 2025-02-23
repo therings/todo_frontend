@@ -39,7 +39,7 @@ function App() {
       const response = await axios.get(API_URL);
       setTodos(response.data);
     } catch (error) {
-      console.error("获取数据失败:", error);
+      console.error("Failed to fetch data:", error);
     } finally {
       setLoading(false);
     }
@@ -56,7 +56,7 @@ function App() {
         },
       ]);
     } catch (error) {
-      console.error("添加任务失败:", error);
+      console.error("Failed to add task:", error);
     }
   };
 
@@ -83,13 +83,13 @@ function App() {
           todo.id === id ? { ...todo, completed: currentTodo.completed } : todo
         )
       );
-      console.error("更新状态失败:", error);
+      console.error("Failed to update status:", error);
     }
   };
 
   const deleteTodo = async (id) => {
     if (!id) {
-      console.error("删除失败: 无效的ID");
+      console.error("Failed to delete: Invalid ID");
       return;
     }
 
@@ -102,7 +102,7 @@ function App() {
         setSelectedTodo(null);
       }
     } catch (error) {
-      console.error("删除失败:", error.response?.data || error.message);
+      console.error("Failed to delete:", error.response?.data || error.message);
     }
   };
 
