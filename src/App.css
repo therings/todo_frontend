@@ -1,0 +1,36 @@
+.app {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+.todo-form {
+  margin-bottom: 20px;
+}
+
+.todo-form input {
+  padding: 8px;
+  margin-right: 10px;
+  width: 70%;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #ddd;
+  margin-bottom: 5px;
+}
+
+.todo-item.completed span {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.todo-item input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+.todo-item button {
+  margin-left: auto;
+}
