@@ -212,17 +212,29 @@ function App() {
       }
 
       // Then sort by date within each group (completed/uncompleted)
-      let dateA, dateB;
-
       if (sortBy === "updatedAt") {
-        dateA = new Date(a.updatedAt || a.createdAt);
-        dateB = new Date(b.updatedAt || b.createdAt);
-      } else {
-        dateA = new Date(a.createdAt);
-        dateB = new Date(b.createdAt);
-      }
+        // For "updatedAt" sorting, items with no updates should go after updated items
+        if (!a.updatedAt && !b.updatedAt) {
+          // If neither has updates, sort by creation date
+          return sortOrder === "desc"
+            ? new Date(b.createdAt) - new Date(a.createdAt)
+            : new Date(a.createdAt) - new Date(b.createdAt);
+        }
 
-      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+        // If only one has updateAt, the updated one should come first
+        if (!a.updatedAt) return 1; // a goes after b
+        if (!b.updatedAt) return -1; // a goes before b
+
+        // If both have updateAt, compare them
+        return sortOrder === "desc"
+          ? new Date(b.updatedAt) - new Date(a.updatedAt)
+          : new Date(a.updatedAt) - new Date(b.updatedAt);
+      } else {
+        // For "createdAt" sorting
+        return sortOrder === "desc"
+          ? new Date(b.createdAt) - new Date(a.createdAt)
+          : new Date(a.createdAt) - new Date(b.createdAt);
+      }
     });
   };
 
