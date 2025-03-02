@@ -39,7 +39,7 @@ function App() {
   const fetchTodos = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(API_URL);
+      const response = await axios.get(`${API_URL}/todos`);
       setTodos(response.data);
     } catch (error) {
       console.error("Failed to fetch data:", error);
@@ -50,7 +50,7 @@ function App() {
 
   const addTodo = async (title) => {
     try {
-      const response = await axios.post(API_URL, {
+      const response = await axios.post(`${API_URL}/todos`, {
         title,
         createdAt: new Date().toISOString(),
       });
@@ -83,8 +83,8 @@ function App() {
     );
 
     try {
-      await axios.put(`${API_URL}/${id}`, {
-        completed: !currentTodo.completed, // Use the current todo's completion status
+      await axios.put(`${API_URL}/todos/${id}`, {
+        completed: !currentTodo.completed,
       });
     } catch (error) {
       // Revert the optimistic update if the API call fails
@@ -104,7 +104,7 @@ function App() {
     }
 
     try {
-      await axios.delete(`${API_URL}/${id}`);
+      await axios.delete(`${API_URL}/todos/${id}`);
       setTodos(todos.filter((t) => t.id !== id));
 
       // Clear selectedTodo if deleting the currently viewed todo
@@ -134,7 +134,7 @@ function App() {
 
   const updateTodo = async (id, newTitle) => {
     try {
-      const response = await axios.put(`${API_URL}/${id}`, {
+      const response = await axios.put(`${API_URL}/todos/${id}`, {
         title: newTitle,
         updatedAt: new Date().toISOString(),
       });
