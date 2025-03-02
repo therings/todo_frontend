@@ -4,39 +4,59 @@ import TodoItem from "./TodoItem";
 import PropTypes from "prop-types";
 
 const TodoList = ({
-  todos,
+  todos = [],
   onToggle,
   onDelete,
+  onUpdate,
   theme,
   columns,
   onCardClick,
-}) => (
-  <Box
-    sx={{
-      mt: 2,
-      padding: 2,
-      display: "grid",
-      gap: 2,
-      gridTemplateColumns: {
-        xs: "1fr",
-        sm: `repeat(${columns}, 1fr)`,
-      },
-    }}
-  >
-    {todos.map((todo) => (
-      <Box key={todo.id} onClick={() => onCardClick(todo)}>
-        <TodoItem
-          todo={todo}
-          onToggle={onToggle}
-          onDelete={onDelete}
-          theme={theme}
-        />
-      </Box>
-    ))}
-  </Box>
-);
+}) => {
+  // Add console.log to debug
+  console.log("Received todos:", todos);
+
+  const todoArray = Array.isArray(todos) ? todos : [];
+  console.log("Processed todoArray:", todoArray);
+
+  return (
+    <Box
+      sx={{
+        mt: 2,
+        padding: 2,
+        display: "grid",
+        gap: 2,
+        gridTemplateColumns: {
+          xs: "1fr",
+          sm: `repeat(${columns}, 1fr)`,
+        },
+      }}
+    >
+      {todoArray.map((todo) => (
+        <Box key={todo.id} onClick={() => onCardClick(todo)}>
+          <TodoItem
+            todo={todo}
+            onToggle={onToggle}
+            onDelete={onDelete}
+            onUpdate={onUpdate}
+            theme={theme}
+          />
+        </Box>
+      ))}
+    </Box>
+  );
+};
 
 TodoList.propTypes = {
+  // Add todos validation
+  todos: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      // Add other todo properties as needed
+    })
+  ),
+  onToggle: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
+  onUpdate: PropTypes.func.isRequired,
   theme: PropTypes.shape({
     background: PropTypes.string,
     text: PropTypes.string,

@@ -4,8 +4,11 @@ import {
   Checkbox,
   IconButton,
   Typography,
+  TextField,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import UpdateTodoButton from "./UpdateTodoButton";
+import { useState } from "react";
 
 export default function TodoItem({
   todo,
@@ -13,8 +16,27 @@ export default function TodoItem({
   onDelete,
   theme,
   isZoomed,
+  onUpdate,
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(todo?.title || "");
+  const [isSaving, setIsSaving] = useState(false);
+
   if (!todo) return null;
+
+  const handleStartEdit = () => {
+    setIsEditing(true);
+    setEditedTitle(todo.title);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    if (editedTitle.trim() !== todo.title) {
+      await onUpdate(todo.id, editedTitle.trim());
+    }
+    setIsEditing(false);
+    setIsSaving(false);
+  };
 
   return (
     <Card
@@ -92,41 +114,102 @@ export default function TodoItem({
               },
             }}
           />
-          <Typography
-            sx={{
-              flex: 1,
-              ml: 1,
-              textAlign: "left",
-              alignSelf: "flex-start",
-              textDecoration: todo.completed ? "line-through" : "none",
-              color: theme.text,
-              wordBreak: "break-word",
-              overflow: isZoomed ? "visible" : "hidden",
-              textOverflow: isZoomed ? "clip" : "ellipsis",
-              display: isZoomed ? "block" : "-webkit-box",
-              WebkitLineClamp: isZoomed ? "unset" : 3,
-              WebkitBoxOrient: isZoomed ? "horizontal" : "vertical",
-              fontSize: isZoomed ? "1.5rem" : "1rem",
-            }}
-          >
-            {todo.title}
-          </Typography>
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              onDelete(todo.id);
-            }}
-            sx={{
-              color: theme.text,
+          {isEditing ? (
+            <TextField
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              onBlur={() => {
+                setTimeout(() => {
+                  if (!isSaving) {
+                    setIsEditing(false);
+                    setEditedTitle(todo.title);
+                  }
+                }, 200);
+              }}
+              fullWidth
+              autoFocus
+              multiline
+              maxRows={3}
+              inputRef={(input) => {
+                if (input) {
+                  input.selectionStart = input.selectionEnd =
+                    editedTitle.length;
+                }
+              }}
+              sx={{
+                flex: 1,
+                ml: 1,
+                mr: 2,
+                "& .MuiInputBase-input": {
+                  color: theme.text,
+                  fontSize: isZoomed ? "1.5rem" : "1rem",
+                  padding: "8px 14px",
+                },
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: theme.border,
+                  },
+                  "&:hover fieldset": {
+                    borderColor: theme.text,
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: theme.text,
+                  },
+                },
+              }}
+            />
+          ) : (
+            <Typography
+              sx={{
+                flex: 1,
+                ml: 1,
+                textAlign: "left",
+                alignSelf: "flex-start",
+                textDecoration: todo.completed ? "line-through" : "none",
+                color: theme.text,
+                wordBreak: "break-word",
+                overflow: isZoomed ? "visible" : "hidden",
+                textOverflow: isZoomed ? "clip" : "ellipsis",
+                display: isZoomed ? "block" : "-webkit-box",
+                WebkitLineClamp: isZoomed ? "unset" : 3,
+                WebkitBoxOrient: isZoomed ? "horizontal" : "vertical",
+                fontSize: isZoomed ? "1.5rem" : "1rem",
+              }}
+            >
+              {todo.title}
+            </Typography>
+          )}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
               marginLeft: "auto",
-              alignSelf: "flex-end",
-              mt: "auto",
-              mr: -1,
+              justifyContent: "space-between",
+              height: "100%",
+              minHeight: "80px",
             }}
           >
-            <DeleteIcon />
-          </IconButton>
+            <UpdateTodoButton
+              todo={todo}
+              theme={theme}
+              onStartEdit={handleStartEdit}
+              isEditing={isEditing}
+              onSave={handleSave}
+            />
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onDelete(todo.id);
+              }}
+              sx={{
+                color: theme.text,
+              }}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </div>
         </div>
       </CardContent>
     </Card>
