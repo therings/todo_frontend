@@ -17,8 +17,9 @@ import TodoList from "./components/TodoList";
 import TodoItem from "./components/TodoItem";
 import ColumnSelector from "./components/ColumnSelector";
 import DarkModeToggle from "./components/DarkModeToggle";
+import SortButton from "./components/SortButton";
 
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = `${process.env.REACT_APP_API_URL}/todos`;
 
 function App() {
   const [todos, setTodos] = useState([]);
@@ -28,6 +29,8 @@ function App() {
   );
   const [selectedTodo, setSelectedTodo] = useState(null);
   const [columns, setColumns] = useState(3);
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [sortBy, setSortBy] = useState("createdAt");
 
   useEffect(() => {
     fetchTodos();
@@ -47,12 +50,19 @@ function App() {
 
   const addTodo = async (title) => {
     try {
-      const response = await axios.post(API_URL, { title });
+      const response = await axios.post(API_URL, {
+        title,
+        createdAt: new Date().toISOString(),
+      });
+
+      // Remove updatedAt from the new todo
+      const { updatedAt, ...newTodo } = response.data;
+
       setTodos((prev) => [
         ...prev,
         {
-          ...response.data,
-          id: String(response.data.id),
+          ...newTodo,
+          id: String(newTodo.id),
         },
       ]);
     } catch (error) {
@@ -122,6 +132,61 @@ function App() {
     setSelectedTodo(todo);
   };
 
+  const updateTodo = async (id, newTitle) => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}`, {
+        title: newTitle,
+        updatedAt: new Date().toISOString(),
+      });
+      setTodos((prevTodos) =>
+        prevTodos.map((todo) =>
+          todo.id === id
+            ? {
+                ...todo,
+                title: newTitle,
+                updatedAt: response.data.updatedAt,
+              }
+            : todo
+        )
+      );
+    } catch (error) {
+      console.error("Failed to update todo:", error);
+    }
+  };
+
+  const handleSort = (newSortBy) => {
+    if (newSortBy === sortBy) {
+      // If clicking the same sort field, toggle the direction
+      setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"));
+    } else {
+      // If changing the sort field, set it and default to desc order
+      setSortBy(newSortBy);
+      setSortOrder("desc");
+    }
+  };
+
+  const getSortedTodos = () => {
+    return [...todos].sort((a, b) => {
+      // First sort by completion status
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1; // Completed items go to the end
+      }
+
+      // Then sort by date within each group (completed/uncompleted)
+      let dateA, dateB;
+
+      if (sortBy === "updatedAt") {
+        dateA = new Date(a.updatedAt || a.createdAt);
+        dateB = new Date(b.updatedAt || b.createdAt);
+      } else {
+        dateA = new Date(a.createdAt);
+        dateB = new Date(b.createdAt);
+      }
+
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    });
+  };
+
   return (
     <div
       style={{
@@ -154,18 +219,33 @@ function App() {
           </Box>
         ) : (
           <>
-            <Box sx={{ display: { xs: "none", sm: "block" } }}>
-              <ColumnSelector
-                columns={columns}
-                onChange={setColumns}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Box sx={{ display: { xs: "none", sm: "block" } }}>
+                <ColumnSelector
+                  columns={columns}
+                  onChange={setColumns}
+                  theme={theme}
+                />
+              </Box>
+              <SortButton
+                sortOrder={sortOrder}
+                sortBy={sortBy}
+                onSort={handleSort}
                 theme={theme}
               />
             </Box>
             <TodoForm onAdd={addTodo} />
             <TodoList
-              todos={todos}
+              todos={getSortedTodos()}
               onToggle={toggleTodo}
               onDelete={deleteTodo}
+              onUpdate={updateTodo}
               theme={theme}
               columns={columns}
               onCardClick={handleCardClick}
