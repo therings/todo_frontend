@@ -19,7 +19,7 @@ import ColumnSelector from "./components/ColumnSelector";
 import DarkModeToggle from "./components/DarkModeToggle";
 import SortButton from "./components/SortButton";
 
-const API_URL = `${process.env.REACT_APP_API_URL}/todos`;
+const API_URL = `${process.env.REACT_APP_API_URL}`;
 
 function App() {
   const [todos, setTodos] = useState([]);
