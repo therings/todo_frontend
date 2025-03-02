@@ -66,23 +66,37 @@ function App() {
 
   const addTodo = async (title) => {
     const url = `${API_URL}/todos`;
+    const tempId = Date.now().toString(); // Temporary ID for optimistic update
+    const newTodo = {
+      id: tempId,
+      title,
+      completed: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Optimistic update - add todo to state immediately
+    setTodos((prev) => [newTodo, ...prev]);
+
     try {
       const response = await axios.post(url, {
         title,
-        createdAt: new Date().toISOString(),
+        createdAt: newTodo.createdAt,
       });
 
-      // Remove updatedAt from the new todo
-      const { updatedAt, ...newTodo } = response.data;
-
-      setTodos((prev) => [
-        ...prev,
-        {
-          ...newTodo,
-          id: String(newTodo.id),
-        },
-      ]);
+      // Update the temporary todo with the real one from server
+      setTodos((prevTodos) =>
+        prevTodos.map((todo) =>
+          todo.id === tempId
+            ? {
+                ...response.data,
+                id: String(response.data.id),
+              }
+            : todo
+        )
+      );
     } catch (error) {
+      // If the API call fails, remove the temporary todo
+      setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== tempId));
       console.error("Failed to add task:", error);
     }
   };
@@ -123,15 +137,20 @@ function App() {
     }
 
     try {
-      await axios.delete(url);
-      await fetchTodos();
+      // Optimistic update - remove todo from state immediately
+      setTodos((prevTodos) => prevTodos.filter((t) => t.id !== id));
 
       // Clear selectedTodo if deleting the currently viewed todo
       if (selectedTodo?.id === id) {
         setSelectedTodo(null);
       }
+
+      // Make the API call after updating the UI
+      await axios.delete(url);
     } catch (error) {
+      // If the API call fails, revert the deletion by fetching todos again
       console.error("Failed to delete:", error.response?.data || error.message);
+      await fetchTodos();
     }
   };
 
