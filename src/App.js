@@ -43,6 +43,13 @@ function App() {
       setTodos(response.data);
     } catch (error) {
       console.error("Failed to fetch data:", error);
+      if (error.response) {
+        console.error(
+          "Error response:",
+          error.response.status,
+          error.response.data
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -105,7 +112,7 @@ function App() {
 
     try {
       await axios.delete(`${API_URL}/todos/${id}`);
-      setTodos(todos.filter((t) => t.id !== id));
+      await fetchTodos();
 
       // Clear selectedTodo if deleting the currently viewed todo
       if (selectedTodo?.id === id) {
