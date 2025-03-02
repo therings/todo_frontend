@@ -19,7 +19,12 @@ import ColumnSelector from "./components/ColumnSelector";
 import DarkModeToggle from "./components/DarkModeToggle";
 import SortButton from "./components/SortButton";
 
-const API_URL = `${process.env.REACT_APP_API_URL}`;
+const API_URL = process.env.REACT_APP_API_URL?.endsWith("/")
+  ? process.env.REACT_APP_API_URL.slice(0, -1)
+  : process.env.REACT_APP_API_URL ||
+    "https://todo-backend-nine-wine.vercel.app";
+
+console.log("API URL:", API_URL);
 
 function App() {
   const [todos, setTodos] = useState([]);
@@ -37,9 +42,11 @@ function App() {
   }, []);
 
   const fetchTodos = async () => {
+    const url = `${API_URL}/todos`;
+    console.log("Fetching from:", url);
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/todos`);
+      const response = await axios.get(url);
       setTodos(response.data);
     } catch (error) {
       console.error("Failed to fetch data:", error);
@@ -47,7 +54,9 @@ function App() {
         console.error(
           "Error response:",
           error.response.status,
-          error.response.data
+          error.response.data,
+          "URL used:",
+          url
         );
       }
     } finally {
@@ -56,8 +65,9 @@ function App() {
   };
 
   const addTodo = async (title) => {
+    const url = `${API_URL}/todos`;
     try {
-      const response = await axios.post(`${API_URL}/todos`, {
+      const response = await axios.post(url, {
         title,
         createdAt: new Date().toISOString(),
       });
@@ -78,6 +88,7 @@ function App() {
   };
 
   const toggleTodo = async (id) => {
+    const url = `${API_URL}/todos/${id}`;
     // Find the current todo to toggle its completion status
     const currentTodo = todos.find((t) => t.id === id);
     if (!currentTodo) return; // Early return if todo not found
@@ -90,7 +101,7 @@ function App() {
     );
 
     try {
-      await axios.put(`${API_URL}/todos/${id}`, {
+      await axios.put(url, {
         completed: !currentTodo.completed,
       });
     } catch (error) {
@@ -105,13 +116,14 @@ function App() {
   };
 
   const deleteTodo = async (id) => {
+    const url = `${API_URL}/todos/${id}`;
     if (!id) {
       console.error("Failed to delete: Invalid ID");
       return;
     }
 
     try {
-      await axios.delete(`${API_URL}/todos/${id}`);
+      await axios.delete(url);
       await fetchTodos();
 
       // Clear selectedTodo if deleting the currently viewed todo
@@ -140,8 +152,9 @@ function App() {
   };
 
   const updateTodo = async (id, newTitle) => {
+    const url = `${API_URL}/todos/${id}`;
     try {
-      const response = await axios.put(`${API_URL}/todos/${id}`, {
+      const response = await axios.put(url, {
         title: newTitle,
         updatedAt: new Date().toISOString(),
       });
