@@ -18,6 +18,7 @@ import TodoItem from "./components/TodoItem";
 import ColumnSelector from "./components/ColumnSelector";
 import DarkModeToggle from "./components/DarkModeToggle";
 import SortButton from "./components/SortButton";
+import Sidebar from "./components/Sidebar";
 
 const API_URL = process.env.REACT_APP_API_URL?.endsWith("/")
   ? process.env.REACT_APP_API_URL.slice(0, -1)
@@ -28,6 +29,7 @@ console.log("API URL:", API_URL);
 
 function App() {
   const [todos, setTodos] = useState([]);
+  const [deletedTodos, setDeletedTodos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(
     localStorage.getItem("darkMode") === "true"
@@ -36,10 +38,21 @@ function App() {
   const [columns, setColumns] = useState(3);
   const [sortOrder, setSortOrder] = useState("desc");
   const [sortBy, setSortBy] = useState("createdAt");
+  const [currentView, setCurrentView] = useState("home");
 
   useEffect(() => {
     fetchTodos();
+    fetchDeletedTodos();
   }, []);
+
+  const fetchDeletedTodos = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/deleted-todos`);
+      setDeletedTodos(response.data);
+    } catch (error) {
+      console.error("Failed to fetch deleted todos:", error);
+    }
+  };
 
   const fetchTodos = async () => {
     const url = `${API_URL}/todos`;
@@ -66,7 +79,7 @@ function App() {
 
   const addTodo = async (title) => {
     const url = `${API_URL}/todos`;
-    const tempId = Date.now().toString(); // Temporary ID for optimistic update
+    const tempId = Date.now().toString();
     const newTodo = {
       id: tempId,
       title,
@@ -74,7 +87,6 @@ function App() {
       createdAt: new Date().toISOString(),
     };
 
-    // Optimistic update - add todo to state immediately
     setTodos((prev) => [newTodo, ...prev]);
 
     try {
@@ -83,7 +95,6 @@ function App() {
         createdAt: newTodo.createdAt,
       });
 
-      // Update the temporary todo with the real one from server
       setTodos((prevTodos) =>
         prevTodos.map((todo) =>
           todo.id === tempId
@@ -95,7 +106,6 @@ function App() {
         )
       );
     } catch (error) {
-      // If the API call fails, remove the temporary todo
       setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== tempId));
       console.error("Failed to add task:", error);
     }
@@ -103,26 +113,52 @@ function App() {
 
   const toggleTodo = async (id) => {
     const url = `${API_URL}/todos/${id}`;
-    // Find the current todo to toggle its completion status
     const currentTodo = todos.find((t) => t.id === id);
-    if (!currentTodo) return; // Early return if todo not found
+    if (!currentTodo) return;
 
-    // Optimistic update
+    const newCompleted = !currentTodo.completed;
+
     setTodos((prevTodos) =>
       prevTodos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+        todo.id === id
+          ? {
+              ...todo,
+              completed: newCompleted,
+              completedAt: newCompleted ? new Date().toISOString() : null,
+            }
+          : todo
       )
     );
 
     try {
-      await axios.put(url, {
-        completed: !currentTodo.completed,
+      const response = await axios.put(url, {
+        completed: newCompleted,
       });
-    } catch (error) {
-      // Revert the optimistic update if the API call fails
+
+      // Update the todo with the server response
       setTodos((prevTodos) =>
         prevTodos.map((todo) =>
-          todo.id === id ? { ...todo, completed: currentTodo.completed } : todo
+          todo.id === id
+            ? {
+                ...todo,
+                completed: response.data.completed,
+                completedAt: response.data.completedAt,
+                updatedAt: response.data.updatedAt,
+              }
+            : todo
+        )
+      );
+    } catch (error) {
+      // Revert changes if the request fails
+      setTodos((prevTodos) =>
+        prevTodos.map((todo) =>
+          todo.id === id
+            ? {
+                ...todo,
+                completed: currentTodo.completed,
+                completedAt: currentTodo.completedAt,
+              }
+            : todo
         )
       );
       console.error("Failed to update status:", error);
@@ -136,21 +172,60 @@ function App() {
       return;
     }
 
+    const todoToDelete = todos.find((t) => t.id === id);
+    if (!todoToDelete) return;
+
     try {
-      // Optimistic update - remove todo from state immediately
+      // First, create a deleted todo record
+      const deletedTodo = {
+        ...todoToDelete,
+        originalId: todoToDelete.id,
+        deletedAt: new Date().toISOString(),
+      };
+
+      const deletedResponse = await axios.post(
+        `${API_URL}/deleted-todos`,
+        deletedTodo
+      );
+      setDeletedTodos((prev) => [deletedResponse.data, ...prev]);
+
+      // Then delete the original todo
+      await axios.delete(url);
       setTodos((prevTodos) => prevTodos.filter((t) => t.id !== id));
 
-      // Clear selectedTodo if deleting the currently viewed todo
       if (selectedTodo?.id === id) {
         setSelectedTodo(null);
       }
-
-      // Make the API call after updating the UI
-      await axios.delete(url);
     } catch (error) {
-      // If the API call fails, revert the deletion by fetching todos again
       console.error("Failed to delete:", error.response?.data || error.message);
       await fetchTodos();
+    }
+  };
+
+  const restoreTodo = async (id) => {
+    const todoToRestore = deletedTodos.find((t) => t.id === id);
+    if (!todoToRestore) return;
+
+    try {
+      // First create a new active todo
+      const { _id, deletedAt, originalId, ...todoData } = todoToRestore;
+      const response = await axios.post(`${API_URL}/todos`, todoData);
+      setTodos((prev) => [response.data, ...prev]);
+
+      // Then delete the todo from deleted todos
+      await axios.delete(`${API_URL}/deleted-todos/${id}`);
+      setDeletedTodos((prev) => prev.filter((t) => t.id !== id));
+    } catch (error) {
+      console.error("Failed to restore todo:", error);
+    }
+  };
+
+  const permanentlyDeleteTodo = async (id) => {
+    try {
+      await axios.delete(`${API_URL}/deleted-todos/${id}`);
+      setDeletedTodos((prev) => prev.filter((t) => t.id !== id));
+    } catch (error) {
+      console.error("Failed to permanently delete todo:", error);
     }
   };
 
@@ -195,46 +270,33 @@ function App() {
 
   const handleSort = (newSortBy) => {
     if (newSortBy === sortBy) {
-      // If clicking the same sort field, toggle the direction
       setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"));
     } else {
-      // If changing the sort field, set it and default to desc order
       setSortBy(newSortBy);
       setSortOrder("desc");
     }
   };
 
   const getSortedTodos = () => {
-    return [...todos].sort((a, b) => {
-      // First sort by completion status
-      if (a.completed !== b.completed) {
-        return a.completed ? 1 : -1; // Completed items go to the end
-      }
+    const todosToSort =
+      currentView === "completed"
+        ? todos.filter((todo) => todo.completed)
+        : currentView === "deleted"
+        ? deletedTodos
+        : todos.filter((todo) => !todo.completed);
 
-      // Then sort by date within each group (completed/uncompleted)
-      if (sortBy === "updatedAt") {
-        // For "updatedAt" sorting, items with no updates should go after updated items
-        if (!a.updatedAt && !b.updatedAt) {
-          // If neither has updates, sort by creation date
-          return sortOrder === "desc"
-            ? new Date(b.createdAt) - new Date(a.createdAt)
-            : new Date(a.createdAt) - new Date(b.createdAt);
+    return [...todosToSort].sort((a, b) => {
+      const getDateValue = (todo, field) => {
+        if (!todo[field]) {
+          return field === "createdAt" ? new Date(todo.createdAt) : new Date(0);
         }
+        return new Date(todo[field]);
+      };
 
-        // If only one has updateAt, the updated one should come first
-        if (!a.updatedAt) return 1; // a goes after b
-        if (!b.updatedAt) return -1; // a goes before b
+      const dateA = getDateValue(a, sortBy);
+      const dateB = getDateValue(b, sortBy);
 
-        // If both have updateAt, compare them
-        return sortOrder === "desc"
-          ? new Date(b.updatedAt) - new Date(a.updatedAt)
-          : new Date(a.updatedAt) - new Date(b.updatedAt);
-      } else {
-        // For "createdAt" sorting
-        return sortOrder === "desc"
-          ? new Date(b.createdAt) - new Date(a.createdAt)
-          : new Date(a.createdAt) - new Date(b.createdAt);
-      }
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
     });
   };
 
@@ -248,11 +310,12 @@ function App() {
     >
       <CssBaseline />
       <AppBar
-        position="static"
+        position="fixed"
         color="default"
         sx={{
           bgcolor: darkMode ? "#1e1e1e" : "#f5f5f5",
           boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          zIndex: (theme) => theme.zIndex.drawer + 1,
         }}
       >
         <Toolbar>
@@ -263,78 +326,107 @@ function App() {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        {loading ? (
-          <Box display="flex" justifyContent="center" mt={4}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <Box sx={{ display: { xs: "none", sm: "block" } }}>
-                <ColumnSelector
-                  columns={columns}
-                  onChange={setColumns}
+      <Sidebar
+        currentView={currentView}
+        onViewChange={setCurrentView}
+        theme={theme}
+      />
+
+      <Box sx={{ ml: "240px" }}>
+        <Container maxWidth="lg" sx={{ py: 10 }}>
+          {loading ? (
+            <Box display="flex" justifyContent="center" mt={4}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Box sx={{ display: { xs: "none", sm: "block" } }}>
+                  <ColumnSelector
+                    columns={columns}
+                    onChange={setColumns}
+                    theme={theme}
+                  />
+                </Box>
+                <SortButton
+                  sortOrder={sortOrder}
+                  sortBy={sortBy}
+                  onSort={handleSort}
                   theme={theme}
+                  currentView={currentView}
                 />
               </Box>
-              <SortButton
-                sortOrder={sortOrder}
-                sortBy={sortBy}
-                onSort={handleSort}
+              {currentView === "home" && <TodoForm onAdd={addTodo} />}
+              <TodoList
+                todos={getSortedTodos()}
+                onToggle={currentView !== "deleted" ? toggleTodo : undefined}
+                onDelete={
+                  currentView === "deleted" ? permanentlyDeleteTodo : deleteTodo
+                }
+                onUpdate={currentView !== "deleted" ? updateTodo : undefined}
+                onRestore={currentView === "deleted" ? restoreTodo : undefined}
                 theme={theme}
+                columns={columns}
+                onCardClick={handleCardClick}
+                isDeletedView={currentView === "deleted"}
               />
-            </Box>
-            <TodoForm onAdd={addTodo} />
-            <TodoList
-              todos={getSortedTodos()}
-              onToggle={toggleTodo}
-              onDelete={deleteTodo}
-              onUpdate={updateTodo}
-              theme={theme}
-              columns={columns}
-              onCardClick={handleCardClick}
-            />
-            <Modal
-              open={!!selectedTodo}
-              onClose={() => setSelectedTodo(null)}
-              closeAfterTransition
-              BackdropComponent={Backdrop}
-              BackdropProps={{ timeout: 500 }}
-            >
-              <Fade in={!!selectedTodo}>
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    width: "80vw",
-                    maxWidth: 600,
-                    outline: "none",
-                  }}
-                >
-                  {selectedTodo && (
-                    <TodoItem
-                      todo={todos.find((t) => t.id === selectedTodo.id)}
-                      onToggle={toggleTodo}
-                      onDelete={deleteTodo}
-                      theme={theme}
-                      isZoomed
-                    />
-                  )}
-                </Box>
-              </Fade>
-            </Modal>
-          </>
-        )}
-      </Container>
+              <Modal
+                open={!!selectedTodo}
+                onClose={() => setSelectedTodo(null)}
+                closeAfterTransition
+                BackdropComponent={Backdrop}
+                BackdropProps={{ timeout: 500 }}
+              >
+                <Fade in={!!selectedTodo}>
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
+                      width: "80vw",
+                      maxWidth: 600,
+                      outline: "none",
+                    }}
+                  >
+                    {selectedTodo && (
+                      <TodoItem
+                        todo={
+                          todos.find((t) => t.id === selectedTodo.id) ||
+                          deletedTodos.find((t) => t.id === selectedTodo.id)
+                        }
+                        onToggle={
+                          currentView !== "deleted" ? toggleTodo : undefined
+                        }
+                        onDelete={
+                          currentView === "deleted"
+                            ? permanentlyDeleteTodo
+                            : deleteTodo
+                        }
+                        onUpdate={
+                          currentView !== "deleted" ? updateTodo : undefined
+                        }
+                        onRestore={
+                          currentView === "deleted" ? restoreTodo : undefined
+                        }
+                        theme={theme}
+                        isZoomed
+                        isDeletedView={currentView === "deleted"}
+                      />
+                    )}
+                  </Box>
+                </Fade>
+              </Modal>
+            </>
+          )}
+        </Container>
+      </Box>
     </div>
   );
 }

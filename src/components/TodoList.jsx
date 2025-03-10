@@ -8,9 +8,11 @@ const TodoList = ({
   onToggle,
   onDelete,
   onUpdate,
+  onRestore,
   theme,
   columns,
   onCardClick,
+  isDeletedView,
 }) => {
   // Add console.log to debug
   console.log("Received todos:", todos);
@@ -38,7 +40,9 @@ const TodoList = ({
             onToggle={onToggle}
             onDelete={onDelete}
             onUpdate={onUpdate}
+            onRestore={onRestore}
             theme={theme}
+            isDeletedView={isDeletedView}
           />
         </Box>
       ))}
@@ -54,9 +58,10 @@ TodoList.propTypes = {
       // Add other todo properties as needed
     })
   ),
-  onToggle: PropTypes.func.isRequired,
+  onToggle: PropTypes.func,
   onDelete: PropTypes.func.isRequired,
-  onUpdate: PropTypes.func.isRequired,
+  onUpdate: PropTypes.func,
+  onRestore: PropTypes.func,
   theme: PropTypes.shape({
     background: PropTypes.string,
     text: PropTypes.string,
@@ -64,6 +69,7 @@ TodoList.propTypes = {
   }).isRequired,
   onCardClick: PropTypes.func.isRequired,
   columns: PropTypes.number.isRequired,
+  isDeletedView: PropTypes.bool,
 };
 
 export default TodoList;

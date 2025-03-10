@@ -5,8 +5,10 @@ import {
   IconButton,
   Typography,
   TextField,
+  Box,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import RestoreIcon from "@mui/icons-material/Restore";
 import UpdateTodoButton from "./UpdateTodoButton";
 import { useState } from "react";
 
@@ -14,9 +16,11 @@ export default function TodoItem({
   todo,
   onToggle,
   onDelete,
+  onUpdate,
+  onRestore,
   theme,
   isZoomed,
-  onUpdate,
+  isDeletedView,
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(todo?.title || "");
@@ -36,6 +40,12 @@ export default function TodoItem({
     }
     setIsEditing(false);
     setIsSaving(false);
+  };
+
+  const handleRestore = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onRestore(todo.id);
   };
 
   return (
@@ -96,24 +106,26 @@ export default function TodoItem({
             padding: "8px 0",
           }}
         >
-          <Checkbox
-            checked={todo.completed}
-            onChange={(e) => {
-              e.stopPropagation();
-              onToggle(todo.id);
-            }}
-            onClick={(e) => e.stopPropagation()}
-            sx={{
-              color: theme.text + "!important",
-              alignSelf: "flex-start",
-              marginTop: "-8px",
-              marginLeft: "-8px",
-              "&.Mui-checked": {
+          {!isDeletedView && (
+            <Checkbox
+              checked={todo.completed}
+              onChange={(e) => {
+                e.stopPropagation();
+                onToggle(todo.id);
+              }}
+              onClick={(e) => e.stopPropagation()}
+              sx={{
                 color: theme.text + "!important",
-                opacity: 0.8,
-              },
-            }}
-          />
+                alignSelf: "flex-start",
+                marginTop: "-8px",
+                marginLeft: "-8px",
+                "&.Mui-checked": {
+                  color: theme.text + "!important",
+                  opacity: 0.8,
+                },
+              }}
+            />
+          )}
           {isEditing ? (
             <TextField
               value={editedTitle}
@@ -160,25 +172,51 @@ export default function TodoItem({
               }}
             />
           ) : (
-            <Typography
-              sx={{
-                flex: 1,
-                ml: 1,
-                textAlign: "left",
-                alignSelf: "flex-start",
-                textDecoration: todo.completed ? "line-through" : "none",
-                color: theme.text,
-                wordBreak: "break-word",
-                overflow: isZoomed ? "visible" : "hidden",
-                textOverflow: isZoomed ? "clip" : "ellipsis",
-                display: isZoomed ? "block" : "-webkit-box",
-                WebkitLineClamp: isZoomed ? "unset" : 3,
-                WebkitBoxOrient: isZoomed ? "horizontal" : "vertical",
-                fontSize: isZoomed ? "1.5rem" : "1rem",
-              }}
-            >
-              {todo.title}
-            </Typography>
+            <Box sx={{ flex: 1, ml: isDeletedView ? 0 : 1 }}>
+              <Typography
+                sx={{
+                  textAlign: "left",
+                  alignSelf: "flex-start",
+                  textDecoration: todo.completed ? "line-through" : "none",
+                  color: theme.text,
+                  wordBreak: "break-word",
+                  overflow: isZoomed ? "visible" : "hidden",
+                  textOverflow: isZoomed ? "clip" : "ellipsis",
+                  display: isZoomed ? "block" : "-webkit-box",
+                  WebkitLineClamp: isZoomed ? "unset" : 3,
+                  WebkitBoxOrient: isZoomed ? "horizontal" : "vertical",
+                  fontSize: isZoomed ? "1.5rem" : "1rem",
+                }}
+              >
+                {todo.title}
+              </Typography>
+              {isDeletedView && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: theme.text,
+                    opacity: 0.7,
+                    display: "block",
+                    mt: 1,
+                  }}
+                >
+                  Deleted: {new Date(todo.deletedAt).toLocaleString()}
+                </Typography>
+              )}
+              {todo.completed && todo.completedAt && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: theme.text,
+                    opacity: 0.7,
+                    display: "block",
+                    mt: 1,
+                  }}
+                >
+                  Completed: {new Date(todo.completedAt).toLocaleString()}
+                </Typography>
+              )}
+            </Box>
           )}
           <div
             style={{
@@ -190,25 +228,52 @@ export default function TodoItem({
               minHeight: "80px",
             }}
           >
-            <UpdateTodoButton
-              todo={todo}
-              theme={theme}
-              onStartEdit={handleStartEdit}
-              isEditing={isEditing}
-              onSave={handleSave}
-            />
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onDelete(todo.id);
-              }}
-              sx={{
-                color: theme.text,
-              }}
-            >
-              <DeleteIcon />
-            </IconButton>
+            {!isDeletedView && (
+              <UpdateTodoButton
+                todo={todo}
+                theme={theme}
+                onStartEdit={handleStartEdit}
+                isEditing={isEditing}
+                onSave={handleSave}
+              />
+            )}
+            {isDeletedView ? (
+              <>
+                <IconButton
+                  onClick={handleRestore}
+                  sx={{
+                    color: theme.text,
+                  }}
+                >
+                  <RestoreIcon />
+                </IconButton>
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onDelete(todo.id);
+                  }}
+                  sx={{
+                    color: theme.text,
+                  }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </>
+            ) : (
+              <IconButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onDelete(todo.id);
+                }}
+                sx={{
+                  color: theme.text,
+                }}
+              >
+                <DeleteIcon />
+              </IconButton>
+            )}
           </div>
         </div>
       </CardContent>
