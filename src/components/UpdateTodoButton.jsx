@@ -7,6 +7,7 @@ export default function UpdateTodoButton({
   onStartEdit,
   isEditing,
   onSave,
+  color,
 }) {
   const handleClick = (e) => {
     if (e) {
@@ -25,7 +26,10 @@ export default function UpdateTodoButton({
     <IconButton
       onClick={handleClick}
       sx={{
-        color: theme.text,
+        color: color || theme.text,
+        "&:hover": {
+          backgroundColor: color ? `${color}15` : undefined,
+        },
       }}
     >
       {isEditing ? <SaveIcon /> : <EditIcon />}

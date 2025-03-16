@@ -19,6 +19,7 @@ import ColumnSelector from "./components/ColumnSelector";
 import DarkModeToggle from "./components/DarkModeToggle";
 import SortButton from "./components/SortButton";
 import Sidebar from "./components/Sidebar";
+import { motion } from "framer-motion";
 
 const API_URL = process.env.REACT_APP_API_URL?.endsWith("/")
   ? process.env.REACT_APP_API_URL.slice(0, -1)
@@ -39,6 +40,7 @@ function App() {
   const [sortOrder, setSortOrder] = useState("desc");
   const [sortBy, setSortBy] = useState("createdAt");
   const [currentView, setCurrentView] = useState("home");
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
 
   useEffect(() => {
     fetchTodos();
@@ -236,9 +238,9 @@ function App() {
   };
 
   const theme = {
-    background: darkMode ? "#121212" : "#fff",
-    text: darkMode ? "#fff" : "#000",
-    border: darkMode ? "#424242" : "#e0e0e0",
+    background: darkMode ? "#121212" : "#f5f7fa",
+    text: darkMode ? "#fff" : "#2c3e50",
+    border: darkMode ? "#424242" : "#e1e5eb",
   };
 
   const handleCardClick = (todo) => {
@@ -313,9 +315,10 @@ function App() {
         position="fixed"
         color="default"
         sx={{
-          bgcolor: darkMode ? "#1e1e1e" : "#f5f5f5",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-          zIndex: (theme) => theme.zIndex.drawer + 1,
+          bgcolor: darkMode ? "#1e1e1e" : "#ffffff",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+          borderBottom: `1px solid ${theme.border}`,
+          zIndex: (theme) => theme.zIndex.drawer + 2,
         }}
       >
         <Toolbar>
@@ -330,9 +333,15 @@ function App() {
         currentView={currentView}
         onViewChange={setCurrentView}
         theme={theme}
+        isExpanded={isSidebarExpanded}
+        onToggleExpand={() => setIsSidebarExpanded(!isSidebarExpanded)}
       />
 
-      <Box sx={{ ml: "240px" }}>
+      <Box
+        component={motion.div}
+        animate={{ marginLeft: isSidebarExpanded ? "200px" : "72px" }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
         <Container maxWidth="lg" sx={{ py: 10 }}>
           {loading ? (
             <Box display="flex" justifyContent="center" mt={4}>

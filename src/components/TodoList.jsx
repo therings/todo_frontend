@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import TodoItem from "./TodoItem";
-
 import PropTypes from "prop-types";
+import { motion, AnimatePresence } from "framer-motion";
 
 const TodoList = ({
   todos = [],
@@ -33,19 +33,29 @@ const TodoList = ({
         },
       }}
     >
-      {todoArray.map((todo) => (
-        <Box key={todo.id} onClick={() => onCardClick(todo)}>
-          <TodoItem
-            todo={todo}
-            onToggle={onToggle}
-            onDelete={onDelete}
-            onUpdate={onUpdate}
-            onRestore={onRestore}
-            theme={theme}
-            isDeletedView={isDeletedView}
-          />
-        </Box>
-      ))}
+      <AnimatePresence mode="popLayout">
+        {todoArray.map((todo) => (
+          <motion.div
+            key={todo.id}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.2 }}
+            layout
+            onClick={() => onCardClick(todo)}
+          >
+            <TodoItem
+              todo={todo}
+              onToggle={onToggle}
+              onDelete={onDelete}
+              onUpdate={onUpdate}
+              onRestore={onRestore}
+              theme={theme}
+              isDeletedView={isDeletedView}
+            />
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </Box>
   );
 };

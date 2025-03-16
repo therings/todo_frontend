@@ -11,6 +11,22 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import RestoreIcon from "@mui/icons-material/Restore";
 import UpdateTodoButton from "./UpdateTodoButton";
 import { useState } from "react";
+import { motion } from "framer-motion";
+
+const getItemColor = (view) => {
+  switch (view) {
+    case "home":
+      return "#4CAF50"; // Green
+    case "completed":
+      return "#2196F3"; // Blue
+    case "deleted":
+      return "#F44336"; // Red
+    default:
+      return "#4CAF50"; // Default to green
+  }
+};
+
+const MotionCard = motion(Card);
 
 export default function TodoItem({
   todo,
@@ -25,6 +41,12 @@ export default function TodoItem({
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(todo?.title || "");
   const [isSaving, setIsSaving] = useState(false);
+  const currentView = isDeletedView
+    ? "deleted"
+    : todo.completed
+    ? "completed"
+    : "home";
+  const currentColor = getItemColor(currentView);
 
   if (!todo) return null;
 
@@ -49,7 +71,7 @@ export default function TodoItem({
   };
 
   return (
-    <Card
+    <MotionCard
       onClick={(e) => {
         if (!e.target.closest("button")) {
           e.preventDefault();
@@ -60,8 +82,6 @@ export default function TodoItem({
       }}
       sx={{
         position: "relative",
-        transform: "none !important",
-        transition: "none !important",
         width: "100%",
         height: "100%",
         display: "flex",
@@ -71,17 +91,18 @@ export default function TodoItem({
           ? `${theme.background} !important`
           : theme.background === "#121212"
           ? "rgba(255, 255, 255, 0.1)"
-          : "rgba(0, 0, 0, 0.08)",
+          : "rgba(44, 62, 80, 0.03)",
         border: `1px solid ${theme.border}`,
         background: isZoomed
           ? "none"
           : theme.background === "#121212"
           ? "linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.08))"
-          : "linear-gradient(145deg, rgba(0,0,0,0.08), rgba(0,0,0,0.06))",
-        boxShadow: isZoomed ? 24 : 2,
-        "&:hover": {
-          transform: "none !important",
-        },
+          : "linear-gradient(145deg, rgba(255,255,255,1), rgba(244,247,250,1))",
+        boxShadow: isZoomed
+          ? 24
+          : theme.background === "#121212"
+          ? "0 2px 8px rgba(255,255,255,0.05)"
+          : "0 2px 8px rgba(0,0,0,0.03)",
         margin: "0",
         padding: "16px",
         maxHeight: "500px",
@@ -90,8 +111,17 @@ export default function TodoItem({
           width: "8px",
         },
         "&::-webkit-scrollbar-thumb": {
-          backgroundColor: "rgba(0,0,0,0.2)",
+          backgroundColor:
+            theme.background === "#121212"
+              ? "rgba(255,255,255,0.2)"
+              : "rgba(0,0,0,0.1)",
           borderRadius: "4px",
+        },
+        "&:hover": {
+          boxShadow:
+            theme.background === "#121212"
+              ? "0 4px 12px rgba(255,255,255,0.08)"
+              : "0 4px 12px rgba(0,0,0,0.05)",
         },
       }}
     >
@@ -115,12 +145,12 @@ export default function TodoItem({
               }}
               onClick={(e) => e.stopPropagation()}
               sx={{
-                color: theme.text + "!important",
+                color: currentColor + "!important",
                 alignSelf: "flex-start",
                 marginTop: "-8px",
                 marginLeft: "-8px",
                 "&.Mui-checked": {
-                  color: theme.text + "!important",
+                  color: currentColor + "!important",
                   opacity: 0.8,
                 },
               }}
@@ -228,13 +258,14 @@ export default function TodoItem({
               minHeight: "80px",
             }}
           >
-            {!isDeletedView && (
+            {!isDeletedView && !todo.completed && (
               <UpdateTodoButton
                 todo={todo}
                 theme={theme}
                 onStartEdit={handleStartEdit}
                 isEditing={isEditing}
                 onSave={handleSave}
+                color={currentColor}
               />
             )}
             {isDeletedView ? (
@@ -242,7 +273,10 @@ export default function TodoItem({
                 <IconButton
                   onClick={handleRestore}
                   sx={{
-                    color: theme.text,
+                    color: currentColor,
+                    "&:hover": {
+                      backgroundColor: `${currentColor}15`,
+                    },
                   }}
                 >
                   <RestoreIcon />
@@ -254,29 +288,37 @@ export default function TodoItem({
                     onDelete(todo.id);
                   }}
                   sx={{
-                    color: theme.text,
+                    color: currentColor,
+                    "&:hover": {
+                      backgroundColor: `${currentColor}15`,
+                    },
                   }}
                 >
                   <DeleteIcon />
                 </IconButton>
               </>
             ) : (
-              <IconButton
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  onDelete(todo.id);
-                }}
-                sx={{
-                  color: theme.text,
-                }}
-              >
-                <DeleteIcon />
-              </IconButton>
+              !todo.completed && (
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onDelete(todo.id);
+                  }}
+                  sx={{
+                    color: currentColor,
+                    "&:hover": {
+                      backgroundColor: `${currentColor}15`,
+                    },
+                  }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              )
             )}
           </div>
         </div>
       </CardContent>
-    </Card>
+    </MotionCard>
   );
 }

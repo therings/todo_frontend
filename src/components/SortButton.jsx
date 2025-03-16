@@ -78,15 +78,17 @@ const SortButton = ({ sortOrder, sortBy, onSort, theme, currentView }) => {
         anchorEl={anchorEl}
         open={open}
         onClose={handleClose}
-        PaperProps={{
-          sx: {
-            backgroundColor: theme.background,
-            color: theme.text,
-            boxShadow:
-              theme.background === "#121212"
-                ? "0 2px 10px rgba(255,255,255,0.1)"
-                : "0 2px 10px rgba(0,0,0,0.1)",
-            border: `1px solid ${theme.border}`,
+        slotProps={{
+          paper: {
+            sx: {
+              backgroundColor: theme.background,
+              color: theme.text,
+              boxShadow:
+                theme.background === "#121212"
+                  ? "0 2px 10px rgba(255,255,255,0.1)"
+                  : "0 2px 10px rgba(0,0,0,0.1)",
+              border: `1px solid ${theme.border}`,
+            },
           },
         }}
       >
