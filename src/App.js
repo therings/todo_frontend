@@ -342,7 +342,7 @@ function App() {
         animate={{ marginLeft: isSidebarExpanded ? "200px" : "72px" }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
-        <Container maxWidth="lg" sx={{ py: 10 }}>
+        <Container maxWidth="false" sx={{ py: 10 }}>
           {loading ? (
             <Box display="flex" justifyContent="center" mt={4}>
               <CircularProgress />
