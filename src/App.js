@@ -1,3 +1,13 @@
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import LoginAndRegister from "./pages/LoginAndRegister";
 import { useState, useEffect } from "react";
 import {
   AppBar,
@@ -10,6 +20,7 @@ import {
   Modal,
   Backdrop,
   Fade,
+  Button,
 } from "@mui/material";
 import axios from "axios";
 import TodoForm from "./components/TodoForm";
@@ -20,6 +31,7 @@ import DarkModeToggle from "./components/DarkModeToggle";
 import SortButton from "./components/SortButton";
 import Sidebar from "./components/Sidebar";
 import { motion } from "framer-motion";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 const API_URL = process.env.REACT_APP_API_URL?.endsWith("/")
   ? process.env.REACT_APP_API_URL.slice(0, -1)
@@ -28,7 +40,8 @@ const API_URL = process.env.REACT_APP_API_URL?.endsWith("/")
 
 console.log("API URL:", API_URL);
 
-function App() {
+function AppContent() {
+  const { logout } = useAuth();
   const [todos, setTodos] = useState([]);
   const [deletedTodos, setDeletedTodos] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -302,6 +315,10 @@ function App() {
     });
   };
 
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <div
       style={{
@@ -326,6 +343,14 @@ function App() {
             Todo Manager
           </Typography>
           <DarkModeToggle darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+          <Button
+            color="inherit"
+            onClick={handleLogout}
+            startIcon={<LogoutIcon />}
+            sx={{ ml: 2, color: theme.text }}
+          >
+            Logout
+          </Button>
         </Toolbar>
       </AppBar>
 
@@ -339,7 +364,9 @@ function App() {
 
       <Box
         component={motion.div}
-        animate={{ marginLeft: isSidebarExpanded ? "200px" : "72px" }}
+        animate={{
+          marginLeft: isSidebarExpanded ? "200px" : "72px",
+        }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         <Container maxWidth="false" sx={{ py: 10 }}>
@@ -437,6 +464,27 @@ function App() {
         </Container>
       </Box>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginAndRegister />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <AppContent />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
