@@ -11,6 +11,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MenuIcon from "@mui/icons-material/Menu";
 import { motion, AnimatePresence } from "framer-motion";
+import DarkModeToggle from "./DarkModeToggle";
 
 const MotionBox = motion(Box);
 const MotionListItem = motion(ListItem);
@@ -21,6 +22,8 @@ const Sidebar = ({
   theme,
   isExpanded,
   onToggleExpand,
+  darkMode,
+  toggleDarkMode,
 }) => {
   const menuItems = [
     { id: "home", label: "Home", icon: <HomeIcon /> },
@@ -56,9 +59,11 @@ const Sidebar = ({
         top: 0,
         zIndex: 1200,
         overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      <List sx={{ mt: 7 }}>
+      <List sx={{ mt: 7, flex: 1 }}>
         <MotionListItem
           component="div"
           sx={{
@@ -174,6 +179,14 @@ const Sidebar = ({
           </MotionListItem>
         ))}
       </List>
+
+      {/* Dark Mode Toggle */}
+      <DarkModeToggle
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
+        theme={theme}
+        isExpanded={isExpanded}
+      />
     </MotionBox>
   );
 };

@@ -1,11 +1,7 @@
 import React from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginAndRegister from "./pages/LoginAndRegister";
 import { useState, useEffect } from "react";
@@ -20,18 +16,16 @@ import {
   Modal,
   Backdrop,
   Fade,
-  Button,
 } from "@mui/material";
 import axios from "axios";
 import TodoForm from "./components/TodoForm";
 import TodoList from "./components/TodoList";
 import TodoItem from "./components/TodoItem";
 import ColumnSelector from "./components/ColumnSelector";
-import DarkModeToggle from "./components/DarkModeToggle";
 import SortButton from "./components/SortButton";
 import Sidebar from "./components/Sidebar";
 import { motion } from "framer-motion";
-import LogoutIcon from "@mui/icons-material/Logout";
+import ProfilePicture from "./components/ProfilePicture";
 
 const API_URL = process.env.REACT_APP_API_URL?.endsWith("/")
   ? process.env.REACT_APP_API_URL.slice(0, -1)
@@ -41,7 +35,6 @@ const API_URL = process.env.REACT_APP_API_URL?.endsWith("/")
 console.log("API URL:", API_URL);
 
 function AppContent() {
-  const { logout } = useAuth();
   const [todos, setTodos] = useState([]);
   const [deletedTodos, setDeletedTodos] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -248,6 +241,8 @@ function AppContent() {
     const newMode = !darkMode;
     setDarkMode(newMode);
     localStorage.setItem("darkMode", newMode);
+    // Dispatch custom event for dark mode change
+    window.dispatchEvent(new Event("darkModeChange"));
   };
 
   const theme = {
@@ -315,10 +310,6 @@ function AppContent() {
     });
   };
 
-  const handleLogout = () => {
-    logout();
-  };
-
   return (
     <div
       style={{
@@ -342,15 +333,9 @@ function AppContent() {
           <Typography variant="h6" sx={{ flexGrow: 1, color: theme.text }}>
             Todo Manager
           </Typography>
-          <DarkModeToggle darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-          <Button
-            color="inherit"
-            onClick={handleLogout}
-            startIcon={<LogoutIcon />}
-            sx={{ ml: 2, color: theme.text }}
-          >
-            Logout
-          </Button>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <ProfilePicture />
+          </Box>
         </Toolbar>
       </AppBar>
 
@@ -360,6 +345,8 @@ function AppContent() {
         theme={theme}
         isExpanded={isSidebarExpanded}
         onToggleExpand={() => setIsSidebarExpanded(!isSidebarExpanded)}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
       />
 
       <Box
@@ -469,22 +456,23 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<LoginAndRegister />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <AppContent />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <GoogleOAuthProvider clientId="654471561523-pvpog1r81h6s5je3huivg4jfhj635qsc.apps.googleusercontent.com">
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<LoginAndRegister />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <AppContent />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }
 
