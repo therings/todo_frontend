@@ -29,3 +29,5 @@ backend/
 
 md files
 *.md
+
+.vercel
