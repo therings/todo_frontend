@@ -10,6 +10,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MenuIcon from "@mui/icons-material/Menu";
+import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import { motion, AnimatePresence } from "framer-motion";
 import DarkModeToggle from "./DarkModeToggle";
 
@@ -27,6 +28,7 @@ const Sidebar = ({
 }) => {
   const menuItems = [
     { id: "home", label: "Home", icon: <HomeIcon /> },
+    { id: "assigned", label: "Assigned to me", icon: <AssignmentIndIcon /> },
     { id: "completed", label: "Completed", icon: <CheckCircleIcon /> },
     { id: "deleted", label: "Deleted", icon: <DeleteIcon /> },
   ];
@@ -35,6 +37,8 @@ const Sidebar = ({
     switch (itemId) {
       case "home":
         return "#4CAF50"; // Green
+      case "assigned":
+        return "#FFC107"; // Amber/Yellow (matching assigned badge color)
       case "completed":
         return "#2196F3"; // Blue
       case "deleted":
