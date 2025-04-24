@@ -13,10 +13,10 @@
   "headers": [
     {
       "source": "/manifest.json",
-      "headers": {
-        "Cache-Control": "public, max-age=3600",
-        "Content-Type": "application/json"
-      }
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600" },
+        { "key": "Content-Type", "value": "application/json" }
+      ]
     }
   ]
 }
