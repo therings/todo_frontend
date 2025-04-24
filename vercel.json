@@ -17,6 +17,13 @@
         "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
         "Access-Control-Allow-Headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization"
       }
+    },
+    {
+      "src": "/manifest.json",
+      "headers": {
+        "Cache-Control": "public, max-age=3600",
+        "Content-Type": "application/json"
+      }
     }
   ],
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
