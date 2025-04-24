@@ -5,7 +5,6 @@ import {
   IconButton,
   Avatar,
   Paper,
-  Divider,
   Tooltip,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";

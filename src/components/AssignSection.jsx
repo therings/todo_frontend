@@ -3,17 +3,13 @@ import {
   IconButton,
   Typography,
   Avatar,
-  AvatarGroup,
   Tooltip,
   Menu,
   MenuItem,
-  ListItemIcon,
-  ListItemText,
   Divider,
   Chip,
 } from "@mui/material";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
@@ -213,56 +209,45 @@ export default function AssignSection({
   };
 
   if (isCompact) {
-    // Compact view with pill/capsule chips
+    // Compact view with stacked avatars
     return (
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
-          flexWrap: "wrap",
-          gap: 0.8,
+          position: "relative",
+          height: 28, // Match the height of the add button
         }}
       >
-        {assignedUsers.length > 0 &&
-          assignedUsers.map((user) => (
-            <Chip
-              key={user.id}
-              avatar={<Avatar src={user.avatar} alt={user.name} />}
-              label={user.name}
-              size="small"
-              onDelete={
-                hasAssignPermission && user.id !== todo.owner.id
-                  ? (event) => {
-                      event.stopPropagation();
-                      event.preventDefault();
-                      handleUnassign(user.id, event);
-                    }
-                  : undefined
-              }
-              sx={{
-                height: "28px",
-                "& .MuiChip-label": {
-                  fontSize: "0.8rem",
-                  padding: "0 8px",
-                },
-                "& .MuiChip-avatar": {
-                  width: 22,
-                  height: 22,
-                },
-                "& .MuiChip-deleteIcon": {
-                  fontSize: "0.9rem",
-                  margin: "0 4px 0 -4px",
-                  width: 18,
-                  height: 18,
-                },
-                backgroundColor:
-                  theme.background === "#121212"
-                    ? "rgba(255,255,255,0.08)"
-                    : "rgba(0,0,0,0.08)",
-                color: theme.text,
-              }}
-            />
-          ))}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            marginRight: hasAssignPermission ? 1 : 0,
+          }}
+        >
+          {assignedUsers.length > 0 &&
+            assignedUsers.map((user, index) => (
+              <Tooltip key={user.id} title={user.name} arrow>
+                <Avatar
+                  src={user.avatar}
+                  alt={user.name}
+                  sx={{
+                    width: 22,
+                    height: 22,
+                    marginLeft: index !== 0 ? -1 : 0, // Overlap avatars except first one
+                    border: `1px solid ${theme.background}`,
+                    backgroundColor:
+                      theme.background === "#121212"
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.1)",
+                    position: "relative", // For proper stacking
+                    zIndex: assignedUsers.length - index, // Stack from left to right
+                  }}
+                />
+              </Tooltip>
+            ))}
+        </Box>
         {hasAssignPermission && (
           <IconButton
             size="small"

@@ -1,4 +1,4 @@
-import { Box, IconButton, Divider } from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import TodoItem from "./TodoItem";
 import CommentSection from "./CommentSection";
@@ -51,16 +51,6 @@ export default function TodoModal({
     theme.background === "#121212"
       ? "rgba(255, 255, 255, 0.3)"
       : "rgba(0, 0, 0, 0.3)";
-
-  // Check if the current todo is assigned to me
-  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-  const currentUserId = storedUser.id;
-  const isAssignedToMe = assignedUsers.some(
-    (user) => String(user.id) === String(currentUserId)
-  );
-
-  // Whether the todo is in the assigned view
-  const isInAssignedView = currentView === "assigned";
 
   return (
     <Box
