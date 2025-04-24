@@ -10,7 +10,6 @@ import {
   CircularProgress,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import RestoreIcon from "@mui/icons-material/Restore";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import { useState, useEffect } from "react";
@@ -37,7 +36,7 @@ const getItemColor = (view, isTemp) => {
   }
 };
 
-const MotionCard = motion.create(Card);
+const MotionCard = motion(Card);
 
 export default function TodoItem({
   todo,
@@ -84,16 +83,16 @@ export default function TodoItem({
 
   // Debug permissions
   useEffect(() => {
-    console.log("TodoItem - Permissions:", {
-      todoId: todo.id,
-      todoOwnerId: todo.owner?.id,
-      currentUserId,
-      isOwner,
-      isAssignedToMe,
-      hasEditPermission,
-      assignedUsers,
-      isTemp,
-    });
+    // console.log("TodoItem - Permissions:", {
+    //   todoId: todo.id,
+    //   todoOwnerId: todo.owner?.id,
+    //   currentUserId,
+    //   isOwner,
+    //   isAssignedToMe,
+    //   hasEditPermission,
+    //   assignedUsers,
+    //   isTemp,
+    // });
   }, [
     todo,
     currentUserId,
