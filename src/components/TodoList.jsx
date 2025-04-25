@@ -71,7 +71,9 @@ const TodoList = ({
               ? "1fr" // 1 column if selected
               : columns === 2
               ? "repeat(2, 1fr)" // 2 columns if selected
-              : "repeat(3, 1fr)", // 3 columns if selected (default)
+              : columns === 3
+              ? "repeat(3, 1fr)" // 3 columns if selected
+              : "repeat(4, 1fr)", // 4 columns if selected
         },
         padding: 2,
         maxHeight: "calc(100vh - 200px)",

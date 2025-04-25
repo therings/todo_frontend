@@ -2,7 +2,7 @@ import { Box, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import TodoItem from "./TodoItem";
 import CommentSection from "./CommentSection";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import PropTypes from "prop-types";
 
 export default function TodoModal({
@@ -32,6 +32,44 @@ export default function TodoModal({
     const todo = todos.find((t) => t.id === selectedTodo.id);
     return todo?.completed ? "completed" : "home";
   }, [selectedTodo, todos, deletedTodos]);
+
+  // Add event listener to handle sidebar navigation clicks when modal is open
+  useEffect(() => {
+    if (!selectedTodo) return;
+
+    const handleSidebarNavClick = (e) => {
+      // Look for navigation list items in the sidebar
+      const clickedElement = e.target;
+
+      // Check if the clicked element is inside a sidebar navigation item
+      // We look for elements inside ListItems that have onClick handlers
+      // for changing views (Home, Assigned, Completed, Deleted)
+      let element = clickedElement;
+      while (element) {
+        // Check if this is a list item element inside the sidebar
+        const isSidebarNavItem =
+          element.tagName === "DIV" &&
+          element.getAttribute("role") === "button" &&
+          element.parentElement &&
+          element.parentElement.tagName === "LI" &&
+          !element.querySelector('svg[data-testid="MenuIcon"]'); // Exclude the hamburger menu
+
+        if (isSidebarNavItem) {
+          onClose();
+          return;
+        }
+        element = element.parentElement;
+      }
+    };
+
+    // Add global click listener
+    document.addEventListener("click", handleSidebarNavClick);
+
+    // Clean up listener when modal closes or unmounts
+    return () => {
+      document.removeEventListener("click", handleSidebarNavClick);
+    };
+  }, [selectedTodo, onClose]);
 
   if (!selectedTodo || !todoView) return null;
 

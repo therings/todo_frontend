@@ -25,6 +25,20 @@ export default function TodoForm({ onAdd }) {
             placeholder="Write a new task..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    edge="end"
+                    color="primary"
+                    type="submit"
+                    aria-label="add todo"
+                  >
+                    <AddIcon />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
             sx={{
               "& .MuiInputBase-input::placeholder": {
                 color: theme.text,
@@ -44,17 +58,6 @@ export default function TodoForm({ onAdd }) {
                 "&:hover fieldset": {
                   borderColor: theme.background === "#1a1a1a" ? "#666" : "#ccc",
                 },
-              },
-            }}
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton sx={{ color: theme.text }} type="submit">
-                      <AddIcon />
-                    </IconButton>
-                  </InputAdornment>
-                ),
               },
             }}
           />

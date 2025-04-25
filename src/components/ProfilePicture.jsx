@@ -29,7 +29,7 @@ import {
 const API_URL = process.env.REACT_APP_API_URL?.endsWith("/")
   ? process.env.REACT_APP_API_URL.slice(0, -1)
   : process.env.REACT_APP_API_URL ||
-    "https://todo-backend-nine-wine.vercel.app";
+    "https://todo-backend-test-beta.vercel.app";
 
 // Constants for file and image restrictions
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB

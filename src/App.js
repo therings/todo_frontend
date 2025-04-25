@@ -27,7 +27,7 @@ import ProfilePicture from "./components/ProfilePicture";
 const API_URL = process.env.REACT_APP_API_URL?.endsWith("/")
   ? process.env.REACT_APP_API_URL.slice(0, -1)
   : process.env.REACT_APP_API_URL ||
-    "https://todo-backend-nine-wine.vercel.app";
+    "https://todo-backend-test-beta.vercel.app";
 
 console.log("API URL:", API_URL);
 
@@ -934,7 +934,11 @@ function AppContent() {
 
       <Sidebar
         currentView={currentView}
-        onViewChange={setCurrentView}
+        onViewChange={(view) => {
+          setCurrentView(view);
+          setSelectedTodo(null);
+          setComments([]);
+        }}
         theme={theme}
         isExpanded={isSidebarExpanded}
         onToggleExpand={() => setIsSidebarExpanded(!isSidebarExpanded)}

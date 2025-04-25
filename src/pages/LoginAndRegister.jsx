@@ -17,13 +17,13 @@ import {
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import axios from "axios";
+import api from "../services/api";
 
 // API URL configuration with fallback
 const API_URL = process.env.REACT_APP_API_URL?.endsWith("/")
   ? process.env.REACT_APP_API_URL.slice(0, -1)
   : process.env.REACT_APP_API_URL ||
-    "https://todo-backend-nine-wine.vercel.app";
+    "https://todo-backend-test-beta.vercel.app";
 
 const LoginAndRegister = () => {
   const navigate = useNavigate();
@@ -80,41 +80,55 @@ const LoginAndRegister = () => {
   // Handle login form submission
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoginError("");
+    setSuccess("");
+
+    // Check if form is valid
+    if (!loginData.email || !loginData.password) {
+      setLoginError("Please enter both email and password");
+      return;
+    }
+
     try {
       // Send login request to backend
-      const response = await axios.post(
-        `${API_URL}/api/users/login`,
-        loginData
-      );
+      const response = await api.post("/api/users/login", loginData);
+
       // Store user data and token in context
       login(response.data.user, response.data.token);
       setSuccess("Login successful!");
+
       // Redirect to home page after successful login
       setTimeout(() => {
         navigate("/");
       }, 1000);
     } catch (error) {
-      setLoginError(error.response?.data?.error || "Login failed");
+      setLoginError(
+        error.response?.data?.error ||
+          "Login failed. Please check your credentials."
+      );
     }
   };
 
   // Handle registration form submission
   const handleRegister = async (e) => {
     e.preventDefault();
-    // Validate password confirmation
+    setRegisterError("");
+    setSuccess("");
+
+    // Check if passwords match
     if (registerData.password !== registerData.confirmPassword) {
       setRegisterError("Passwords do not match");
       return;
     }
+
     try {
       // Send registration request to backend
-      await axios.post(`${API_URL}/api/users/register`, {
-        name: registerData.name,
-        email: registerData.email,
-        password: registerData.password,
-      });
-      setSuccess("Registration successful! You can now login.");
-      // Switch to login tab after successful registration
+      const response = await api.post("/api/users/register", registerData);
+
+      // Show success message
+      setSuccess("Registration successful! You can now log in.");
+
+      // Switch to login tab after registration
       setTimeout(() => {
         setTab(0);
       }, 2000);
@@ -127,7 +141,7 @@ const LoginAndRegister = () => {
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       // Send Google credential to backend for verification
-      const response = await axios.post(`${API_URL}/api/users/google-login`, {
+      const response = await api.post("/api/users/google-login", {
         credential: credentialResponse.credential,
       });
       // Store user data and token in context
@@ -138,7 +152,8 @@ const LoginAndRegister = () => {
         navigate("/");
       }, 1000);
     } catch (error) {
-      setLoginError("Google login failed");
+      console.error("Google login error:", error);
+      setLoginError(error.response?.data?.error || "Google login failed");
     }
   };
 
